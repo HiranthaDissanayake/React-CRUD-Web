@@ -1,8 +1,8 @@
 package backend.backend.controller;
 
-import backend.backend.exception.ResourceNotFoundException;
+import backend.backend.dto.InventoryDTO;
 import backend.backend.model.InventoryModel;
-import backend.backend.repository.InventoryRepository;
+import backend.backend.service.InventoryService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -12,58 +12,47 @@ import java.util.List;
 @CrossOrigin(origins = "http://localhost:3000")
 public class InventoryController {
 
-    private final InventoryRepository inventoryRepository;
+    private final InventoryService inventoryService;
 
-    public InventoryController(InventoryRepository inventoryRepository) {
-        this.inventoryRepository = inventoryRepository;
+    public InventoryController(InventoryService inventoryService) {
+        this.inventoryService = inventoryService;
     }
 
-    // CREATE
     @PostMapping
-    public InventoryModel createItem(@RequestBody InventoryModel inventory) {
-        return inventoryRepository.save(inventory);
+    public InventoryModel create(@RequestBody InventoryDTO dto) {
+        InventoryModel item = new InventoryModel(
+                dto.getItemName(),
+                dto.getQuantity(),
+                dto.getPrice()
+        );
+        return inventoryService.createItem(item);
     }
 
-    // READ ALL
     @GetMapping
-    public List<InventoryModel> getAllItems() {
-        return inventoryRepository.findAll();
+    public List<InventoryModel> getAll() {
+        return inventoryService.getAllItems();
     }
 
-    // READ BY ID
     @GetMapping("/{id}")
-    public InventoryModel getItemById(@PathVariable Long id) {
-        return inventoryRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Item not found with id: " + id));
+    public InventoryModel getById(@PathVariable Long id) {
+        return inventoryService.getItemById(id);
     }
 
-    // UPDATE
     @PutMapping("/{id}")
-    public InventoryModel updateItem(
-            @PathVariable Long id,
-            @RequestBody InventoryModel updatedItem) {
+    public InventoryModel update(@PathVariable Long id, @RequestBody InventoryDTO dto) {
 
-        InventoryModel item = inventoryRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Item not found with id: " + id));
+        InventoryModel item = new InventoryModel(
+                dto.getItemName(),
+                dto.getQuantity(),
+                dto.getPrice()
+        );
 
-        item.setItemName(updatedItem.getItemName());
-        item.setQuantity(updatedItem.getQuantity());
-        item.setPrice(updatedItem.getPrice());
-
-        return inventoryRepository.save(item);
+        return inventoryService.updateItem(id, item);
     }
 
-    // DELETE
     @DeleteMapping("/{id}")
-    public String deleteItem(@PathVariable Long id) {
-
-        InventoryModel item = inventoryRepository.findById(id)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Item not found with id: " + id));
-
-        inventoryRepository.delete(item);
-        return "Item deleted successfully";
+    public String delete(@PathVariable Long id) {
+        inventoryService.deleteItem(id);
+        return "Deleted successfully";
     }
 }

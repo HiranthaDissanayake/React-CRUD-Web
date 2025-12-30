@@ -1,23 +1,56 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import InventoryForm from "./components/InventoryForm";
+import InventoryList from "./components/InventoryList";
+import {
+  getAllItems,
+  createItem,
+  updateItem,
+  deleteItem,
+} from "./services/inventoryService";
 
 function App() {
+  const [items, setItems] = useState([]);
+  const [selectedItem, setSelectedItem] = useState(null);
+
+  const loadItems = () => {
+    getAllItems().then((res) => setItems(res.data));
+  };
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
+  const handleSave = (item) => {
+    if (selectedItem) {
+      updateItem(selectedItem.id, item).then(() => {
+        loadItems();
+        setSelectedItem(null);
+      });
+    } else {
+      createItem(item).then(() => loadItems());
+    }
+  };
+
+  const handleDelete = (id) => {
+    deleteItem(id).then(() => loadItems());
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div style={{ padding: "20px" }}>
+      <h2>Inventory Management</h2>
+
+      <InventoryForm
+        onSave={handleSave}
+        selectedItem={selectedItem}
+      />
+
+      <br />
+
+      <InventoryList
+        items={items}
+        onEdit={setSelectedItem}
+        onDelete={handleDelete}
+      />
     </div>
   );
 }
